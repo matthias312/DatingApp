@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using API.DTOs;
 using API.Entities;
+using API.Helpers;
 using API.Interfaces;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -27,15 +29,30 @@ namespace API.Data
                 .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
                 .SingleOrDefaultAsync();
 
-        public async Task<IEnumerable<MemberDto>> GetMembersAsync()
-            => await _context.Users
-                .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+        public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)
+        {
+            var query = _context.Users.AsQueryable();
+            query = query.Where(u => !u.UserName.Equals(userParams.CurrentUsername));
+            query = query.Where(u => u.Gender.Equals(userParams.Gender));
+
+            var mindob = DateTime.Today.AddYears(-userParams.MaxAge - 1);
+            var maxdob = DateTime.Today.AddYears(-userParams.MinAge);
+            query = query.Where(u => u.DateOfBirth >= mindob && u.DateOfBirth <= maxdob);
+
+            query = userParams.OrderBy switch
+            {
+                "created" => query.OrderByDescending(u => u.Created),
+                _ => query.OrderByDescending(u => u.LastActive)
+            };
+
+            var memberQuery = query.ProjectTo<MemberDto>(_mapper.ConfigurationProvider).AsNoTracking();
+            return await PagedList<MemberDto>.CreateAsync(memberQuery, userParams.PageNumber, userParams.PageSize);
+        }
 
         public async Task<AppUser> GetUserByIdAsync(int id)
             => await _context.Users.FindAsync(id);
 
-        public async Task<AppUser> GetUserByUserNameAsync(string username) 
+        public async Task<AppUser> GetUserByUserNameAsync(string username)
             => await _context.Users
                 .Include(p => p.Photos)
                 .SingleOrDefaultAsync(x => x.UserName.Equals(username));
@@ -43,10 +60,10 @@ namespace API.Data
         public async Task<IEnumerable<AppUser>> GetUsersAsync()
             => await _context.Users.Include(p => p.Photos).ToListAsync();
 
-        public async Task<bool> SaveAllAsync() 
+        public async Task<bool> SaveAllAsync()
             => await _context.SaveChangesAsync() > 0;
 
-        public void Update(AppUser user) 
+        public void Update(AppUser user)
             => _context.Entry(user).State = EntityState.Modified;
     }
 }

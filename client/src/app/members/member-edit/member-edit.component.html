@@ -17,12 +17,12 @@
                     <p>{{member.city}}, {{member.country}}</p>
                 </div>
                 <div>
-                    <strong>Age:</strong>
-                    <p>{{member.age}}</p>
+                    <strong>Last Active:</strong>
+                    <p>{{member.lastActive | timeago}}</p>
                 </div>
                 <div>
-                    <strong>Last Active:</strong>
-                    <p>{{member.lastActive}}</p>
+                    <strong>Member since:</strong>
+                    <p>{{member.created | date}}</p>
                 </div>
                 <div>
                     <strong>Member since:</strong>
