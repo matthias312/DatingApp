@@ -21,10 +21,17 @@ namespace API.Entities
         public string Country { get; set; }
         public ICollection<Photo> Photos { get; set; }
 
-        // User die diese Userinstanz geliked haben.
+        /// <summary>
+        /// User die diese User-Instanz geliked haben.
+        /// </summary>
         public ICollection<UserLike> LikedByUsers { get; set; }
 
-        // User die von dieser Userinstanz geliked wurden.
+        /// <summary>
+        /// User die von dieser User-Instanz geliked wurden.
+        /// </summary>
         public ICollection<UserLike> LikedUsers { get; set; }
+
+        public ICollection<Message> MessagesSent { get; set; }
+        public ICollection<Message> MessagesReceived { get; set; }
     }
 }
